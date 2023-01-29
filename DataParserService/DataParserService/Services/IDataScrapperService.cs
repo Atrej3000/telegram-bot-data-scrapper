@@ -1,0 +1,9 @@
+﻿using DataParserService.Models;
+
+namespace DataParserService.Services
+{
+    public interface IDataScrapperService
+    {
+        void ParseDataPage(List<Post> posts, string category, int page, string userAgent);
+    }
+}
