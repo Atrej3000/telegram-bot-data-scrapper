@@ -1,4 +1,6 @@
 ﻿
+using DataParserService.Services;
+
 namespace DataParserService;
 
 public class Program
@@ -8,8 +10,11 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
-
+        builder.Services.AddTransient<IProxyProviderService, ProxyProviderService>();
+        builder.Services.AddTransient<IUserAgentProviderService, UserAgentProviderService>();
+        builder.Services.AddTransient<IDataScrapperService, DataScrapperService>();
         builder.Services.AddControllers();
+        
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
@@ -26,7 +31,6 @@ public class Program
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
-
 
         app.MapControllers();
 
