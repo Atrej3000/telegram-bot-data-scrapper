@@ -3,12 +3,17 @@ using HtmlAgilityPack;
 using DataParserService.Models;
 using DataParserService.Services;
 using DataParserService.Constants;
+using System.Text;
+using System.Text.RegularExpressions;
+using static System.Net.Mime.MediaTypeNames;
+using System;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace DataParserService.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DataParserController : ControllerBase
+    public partial class DataParserController : ControllerBase
     {
         private readonly HttpClient _client;
         private readonly IUserAgentProviderService _browser;
@@ -30,14 +35,48 @@ namespace DataParserService.Controllers
             var categoryFormatted = category.Replace(" ", "-");
             var agents = await _browser.GetUserAgents(_client);
 
-            Parallel.For(1, Xpath.PAGES + 1, page =>
-            {
-                var userAgent = agents[Random.Shared.Next(agents.Count)];
-                _scrapper.ParseDataPage(posts, categoryFormatted, page, userAgent);
-            });
+            var url = $"https://www.olx.ua/d/uk/list/q-{categoryFormatted}/";
+            var htmlPage = _client.GetStringAsync(url).GetAwaiter().GetResult();
+            var doc = new HtmlDocument();
+            doc.LoadHtml(htmlPage);
 
+            var itemQuantityElement = doc.DocumentNode.SelectSingleNode(Xpath.QUANTITY).InnerText;
+            var paginationList = doc.DocumentNode.SelectNodes(Xpath.PAGINATIONLIST);
+
+            if (itemQuantityElement is not null)
+            {
+                Match match = ItemPattern().Match(itemQuantityElement);
+                var quantityString = match.Value;
+                if (!string.IsNullOrEmpty(quantityString))
+                {
+                    int quantityNumber = Convert.ToInt32(quantityString);
+                    if (quantityNumber != 0)
+                    {
+                        if (paginationList is not null)
+                        {
+                            var pages = Convert.ToInt32(paginationList.Last().InnerText);
+                            Parallel.For(1, pages + 1, page =>
+                            {
+                                var userAgent = agents[Random.Shared.Next(agents.Count)];
+                                _scrapper.ParseDataPage(posts, categoryFormatted, page, userAgent);
+                            });
+                            return Ok(posts);
+                        }
+                        else
+                        {
+                            var userAgent = agents[Random.Shared.Next(agents.Count)];
+                            _scrapper.ParseDataPage(posts, categoryFormatted, 1, userAgent);
+                            return Ok(posts);
+                        }
+                    }
+                    return Ok(posts);
+                }
+                return Ok(posts);
+            }
             return Ok(posts);
         }
+        [GeneratedRegex("\\d{1,4}")]
+        private static partial Regex ItemPattern();
     }
 }
 
