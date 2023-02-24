@@ -3,11 +3,7 @@ using HtmlAgilityPack;
 using DataParserService.Models;
 using DataParserService.Services;
 using DataParserService.Constants;
-using System.Text;
 using System.Text.RegularExpressions;
-using static System.Net.Mime.MediaTypeNames;
-using System;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace DataParserService.Controllers
 {
@@ -31,8 +27,8 @@ namespace DataParserService.Controllers
         [HttpGet("{category}")]
         public async Task<ActionResult<IEnumerable<Post>>> GetDataByCategory(string category)
         {
-            var posts = new List<Post>();
-            var categoryFormatted = category.Replace(" ", "-");
+            var posts = new HashSet<Post>();
+            var categoryFormatted = CategoryPattern().Replace($"{category}", "").Replace(" ", "-");
             var agents = await _browser.GetUserAgents(_client);
 
             var url = $"https://www.olx.ua/d/uk/list/q-{categoryFormatted}/";
@@ -77,6 +73,8 @@ namespace DataParserService.Controllers
         }
         [GeneratedRegex("\\d{1,4}")]
         private static partial Regex ItemPattern();
+        [GeneratedRegex("[^0-9A-Za-z ,]")]
+        private static partial Regex CategoryPattern();
     }
 }
 

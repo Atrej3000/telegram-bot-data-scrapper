@@ -2,9 +2,9 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 using DataParserService.Constants;
+using DataParserService.Extensions;
 using DataParserService.Models;
 using HtmlAgilityPack;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DataParserService.Services
 {
@@ -16,7 +16,7 @@ namespace DataParserService.Services
         {
             _proxy = proxyProvider;
         }
-        public void ParseDataPage(List<Post> posts, string category, int page, string userAgent)
+        public void ParseDataPage(HashSet<Post> posts, string category, int page, string userAgent)
         {
             var firstPage = $"https://www.olx.ua/d/uk/list/q-{category}/?search%5Bphotos%5D=1&search%5Border%5D=created_at:desc";
             var nthPage = $"https://www.olx.ua/d/uk/list/q-{category}/?page={page}&search%5Border%5D=created_at%3Adesc&search%5Bphotos%5D=1";
@@ -52,11 +52,9 @@ namespace DataParserService.Services
             }
         }
 
-        private static void AddPostInfo(List<Post> posts, HtmlNode? node)
+        private static void AddPostInfo(HashSet<Post> posts, HtmlNode? node)
         {
             var title = node?.SelectSingleNode(Xpath.TITLE)?.InnerText;
-            var image = node?.SelectSingleNode(Xpath.IMAGE)?.Attributes["src"]?.Value;
-            var status = node?.SelectSingleNode(Xpath.STATUS)?.InnerText;
             var uri = node?.SelectSingleNode(Xpath.URI)?.Attributes["href"]?.Value;
             var price = node?.SelectSingleNode(Xpath.PRICE)?.InnerText;
             var placeDate = node?.SelectSingleNode(Xpath.PLACEDATE)?.InnerText;
@@ -71,11 +69,9 @@ namespace DataParserService.Services
                     Console.WriteLine(dateTime.ToString());
                     posts.Add(new Post
                     {
-                        Title = title,
-                        Image = image ?? "Image not found",
-                        Status = status ?? "Status undefined",
-                        Uri = $"http://www.olx.ua{uri}" ?? "",
-                        Price = price,
+                        Title = title.CheckNull().ToUTF8(),
+                        Uri = $"http://www.olx.ua{uri}".CheckNull(),
+                        Price = price.CheckNull().ToUTF8(),
                         Date = dateTime
                     });
                 }
