@@ -46,6 +46,7 @@ namespace DataParserService.Controllers
                 if (!string.IsNullOrEmpty(quantityString))
                 {
                     int quantityNumber = Convert.ToInt32(quantityString);
+                    Console.WriteLine(quantityNumber);
                     if (quantityNumber != 0)
                     {
                         if (paginationList is not null)
@@ -73,7 +74,7 @@ namespace DataParserService.Controllers
         }
         [GeneratedRegex("\\d{1,4}")]
         private static partial Regex ItemPattern();
-        [GeneratedRegex("[^0-9A-Za-z ,]")]
+        [GeneratedRegex("[^0-9A-Za-zА-ЯҐЄІЇа-яґєії ,]")]
         private static partial Regex CategoryPattern();
     }
 }
