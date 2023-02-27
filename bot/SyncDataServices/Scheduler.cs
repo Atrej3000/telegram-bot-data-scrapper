@@ -14,37 +14,44 @@ public class BackgroundWorker : IHostedService, IDisposable
 {
 	private readonly ILogger<BackgroundWorker> _logger;
 	private readonly IDataParserDataClient _dataParserDataClient;
-	private readonly PeriodicTimer _timer;
+	private PeriodicTimer _timer;
 	private readonly ITelegramBotClient _botClient;
 	private readonly IUOW _UOW;
 	private Task _timerTask;
+	private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
-	public BackgroundWorker(ILogger<BackgroundWorker> logger, IDataParserDataClient dataParserDataClient, ITelegramBotClient botClient, IUOW UOW, IDbContextFactory<SubscriptionsContext> factory)
+	public BackgroundWorker(ILogger<BackgroundWorker> logger, IDataParserDataClient dataParserDataClient, ITelegramBotClient botClient, IUOW UOW)
 	{
 		_logger = logger;
 		_dataParserDataClient = dataParserDataClient;
-		_timer = new PeriodicTimer(TimeSpan.FromSeconds(100));
 		_botClient = botClient;
 		_UOW = UOW;
 	}
 
 	public Task StartAsync(CancellationToken cancellationToken)
 	{
-		_logger.LogInformation("Background worker starting.");
+		_logger.LogWarning("Background worker starting.");
 
-		_timerTask = DoWorkAsync();
+		_timer = new PeriodicTimer(TimeSpan.FromSeconds(100));
+
+		_timerTask = Task.Run(() => DoWorkAsync(_cts.Token), cancellationToken);
 
 		return Task.CompletedTask;
 	}
 
-	public Task StopAsync(CancellationToken cancellationToken)
+	public async Task StopAsync(CancellationToken cancellationToken)
 	{
-		_logger.LogInformation("Background worker stopping.");
+		_logger.LogWarning("Background worker stopping.");
+
+		_cts.Cancel();
+
+		// Wait for the background task to complete.
+		await Task.WhenAny(_timerTask, Task.Delay(Timeout.Infinite, cancellationToken));
 
 		// Stop the periodic timer
 		Dispose();
 
-		return Task.CompletedTask;
+		_cts.Dispose();
 	}
 
 	public void Dispose()
@@ -52,11 +59,11 @@ public class BackgroundWorker : IHostedService, IDisposable
 		_timer?.Dispose();
 	}
 
-	private async Task DoWorkAsync()
+	private async Task DoWorkAsync(CancellationToken cancellationToken)
 	{
 		try
 		{
-			_logger.LogInformation("Running background task.");
+			_logger.LogWarning("Running background task.");
 
 			string? result;
 
@@ -158,6 +165,9 @@ public class BackgroundWorker : IHostedService, IDisposable
 		catch (Exception ex)
 		{
 			_logger.LogError("Error running background task: {0}", ex.Message);
+
+			StopAsync(cancellationToken).Wait(cancellationToken);
+			StartAsync(cancellationToken).Wait(cancellationToken);
 		}
 	}
 }
