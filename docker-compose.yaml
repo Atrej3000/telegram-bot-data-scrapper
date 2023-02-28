@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      SA_PASSWORD: "Qazwsxedc123!"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+      MSSQL_DATABASE: "SubsDb"
+      MSSQL_FORCE_ENCRYPTION: "0"
+    ports:
+      - "1433:1433"
+      #volumes:
+      #- sqlserverdata:/var/opt/mssql
+
+  bot:
+    image: yarmatvii/bot
+    restart: always
+    depends_on:
+      - db
+    environment:
+      ASPNETCORE_URLS: "http://+:8443"
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_LOGGING__CONSOLE__ENABLED: "True"
+      ASPNETCORE_LOGGING__CONSOLE__LOGLEVEL__DEFAULT: "Warning"
+    ports:
+      - "8443:8443"
+
+  data-parser:
+    image: yarmatvii/dataparserservice
+    environment:
+      ASPNETCORE_URLS: "http://+:8888"
+    ports:
+      - "8888:8888"
+
+  ngrok:
+    image: ngrok/ngrok
+    network_mode: "host"
+    command: http 8443
+    environment:
+      NGROK_HEADER: "localhost:8443"
+      NGROK_AUTHTOKEN: "2KpSoMcvAOWi4xsEutn8EJ84WOg_2HwQBvh9LpP4XtD6UL49Y"
+    #volumes:
+    #sqlserverdata:
+    #external: true
