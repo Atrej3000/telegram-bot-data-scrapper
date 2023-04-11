@@ -15,18 +15,17 @@ namespace DataParserService.Services
 
         public HttpClient CreateClient()
         {
-            var proxy = new WebProxy
+            WebProxy proxy = new()
             {
                 Address = new Uri($"{_configuration["Proxy:Protocol"]}://{_configuration["Proxy:Domain"]}:{_configuration["Proxy:Port"]}"),
                 Credentials = new NetworkCredential($"{_configuration["Proxy:Username"]}", $"{_configuration["Proxy:Password"]}")
             };
 
-            var handler = new HttpClientHandler
+            HttpClientHandler handler = new()
             {
                 Proxy = proxy,
+                DefaultProxyCredentials = CredentialCache.DefaultCredentials
             };
-
-            handler.DefaultProxyCredentials = CredentialCache.DefaultCredentials;
             return new HttpClient(handler);
         } 
     }

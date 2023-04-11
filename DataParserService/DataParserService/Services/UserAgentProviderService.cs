@@ -8,7 +8,7 @@ namespace DataParserService.Services
     {
         public async Task<List<string>> GetUserAgents(HttpClient httpClient)
         {
-            var response = await httpClient.GetStringAsync("https://www.useragents.me/api");
+            string response = await httpClient.GetStringAsync("https://www.useragents.me/api");
             Root? root = JsonSerializer.Deserialize<Root>(response);
             if (root != null)
             {
