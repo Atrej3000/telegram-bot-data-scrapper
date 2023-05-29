@@ -2,6 +2,6 @@
 {
     public interface IUserAgentProviderService
     {
-        Task<List<string>> GetUserAgents(HttpClient httpClient);
+        Task<List<string>> GetUserAgentsAsync(HttpClient httpClient);
     }
 }

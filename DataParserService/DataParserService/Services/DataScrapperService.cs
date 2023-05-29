@@ -17,7 +17,7 @@ namespace DataParserService.Services
         {
             _proxy = proxyProvider;
         }
-        public void ParseDataPage(HashSet<Post> posts, string category, int page, string userAgent)
+        public async Task ParseDataPage(HashSet<Post> posts, string category, int page, string userAgent)
         {
             string url = GetUrlForPage(category, page);
 
@@ -27,7 +27,7 @@ namespace DataParserService.Services
 
             try
             {
-                string htmlPage = client.GetStringAsync(url).GetAwaiter().GetResult();
+                string htmlPage = await client.GetStringAsync(url);
 
                 if (string.IsNullOrEmpty(htmlPage)) return;
                 

@@ -6,7 +6,7 @@ namespace DataParserService.Services
 {
     public class UserAgentProviderService : IUserAgentProviderService
     {
-        public async Task<List<string>> GetUserAgents(HttpClient httpClient)
+        public async Task<List<string>> GetUserAgentsAsync(HttpClient httpClient)
         {
             string response = await httpClient.GetStringAsync("https://www.useragents.me/api");
             Root? root = JsonSerializer.Deserialize<Root>(response);

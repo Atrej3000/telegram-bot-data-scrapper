@@ -20,7 +20,6 @@ namespace DataParserService.Controllers
             _client = proxyProviderService.CreateClient();
             _browser = userAgentService;
             _scrapper = dataScrapperService;
-            _browser.GetUserAgents(_client).GetAwaiter().GetResult();
         }
 
         // GET api/values/usb
@@ -29,9 +28,9 @@ namespace DataParserService.Controllers
         {
             HashSet<Post> posts = new();
             string categoryFormatted = GetFormattedCategory(category);
-            List<string> agents = await _browser.GetUserAgents(_client);
+            List<string> agents = await _browser.GetUserAgentsAsync(_client);
             string url = $"https://www.olx.ua/d/uk/list/q-{categoryFormatted}/";
-            string htmlPage = _client.GetStringAsync(url).GetAwaiter().GetResult();
+            string htmlPage = await _client.GetStringAsync(url);
             HtmlDocument doc = new();
             doc.LoadHtml(htmlPage);
 
